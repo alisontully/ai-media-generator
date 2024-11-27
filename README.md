@@ -1,121 +1,116 @@
+
 # AI Media Generator
 
-A Python-based project that generates videos using AI. The workflow includes:
-1. Generating text using ChatGPT.
-2. Converting the text to audio using Aidocmaker's AI Voice Generator.
-3. Creating images based on the text using DALL·E.
-4. Compiling everything into a video.
-
----
+AI Media Generator is a Python application that generates multimedia content based on user prompts. It uses the following capabilities:
+- **OpenAI GPT** for text generation.
+- **Google Cloud Text-to-Speech** for audio narration.
+- **DALL·E** for image generation.
+- **MoviePy** for combining images and audio into a video.
 
 ## Features
-
-- **Text Generation**: Uses OpenAI's ChatGPT API for generating text from a prompt.
-- **Audio Generation**: Converts the generated text to high-quality speech using Aidocmaker's AI Voice Generator.
-- **Image Generation**: Generates images based on the text using OpenAI's DALL·E API.
-- **Video Creation**: Combines the generated audio and images into a video.
-
----
-
-## Prerequisites
-
-- **Python**: Version 3.10 or higher.
-- **Conda**: For environment management.
-- **Poetry**: For dependency management (installed automatically by the setup script).
+1. **Text Generation**: Generate stories or scripts based on user prompts.
+2. **Scene Division**: Automatically splits generated text into scenes.
+3. **Image Creation**: Generates one image per scene using DALL·E.
+4. **Audio Narration**: Converts the full story into audio using Google Text-to-Speech.
+5. **Video Creation**: Combines images and audio into a cohesive video.
 
 ---
 
-## Setup Instructions
+## Installation
 
-### 1. Clone the Repository
+### Prerequisites
+- Python 3.10+
+- Google Cloud account with Text-to-Speech API enabled.
+- OpenAI API key for GPT and DALL·E access.
+- FFmpeg installed (for MoviePy and Pydub).
+
+### Clone the Repository
 ```bash
 git clone https://github.com/alisontully/ai-media-generator.git
 cd ai-media-generator
 ```
 
-### 2. Set Environment Variables
-Before running the setup, make sure to set the following environment variables:
-- `ENV_NAME`: Name of the Conda environment (e.g., `ai-media-env`).
-- `PYTHON_VERSION`: Python version to use (e.g., `3.10`).
-- `PROJECT_NAME` (optional): Project name (default: `ai-media-generator`).
+### Set Up the Environment
+1. Install dependencies:
+    ```bash
+    poetry install
+    ```
+2. Add your environment variables in a `.env` file:
+    ```
+    OPENAI_API_KEY=your_openai_api_key
+    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-google-credentials.json
+    ```
 
-Copy `.env.example` to `.env` and fill in the required values.
-
-### 3. Run the Setup Script
-Run the `setup.sh` script to create the environment, install dependencies, and configure the project:
-```bash
-ENV_NAME=ai-media-env PYTHON_VERSION=3.10 PROJECT_NAME=ai-media-generator ./setup.sh
-```
-
-The script performs the following steps:
-- Creates a Conda environment with the specified Python version.
-- Installs Poetry in the environment.
-- Configures the project name and Python version in `pyproject.toml`.
-- Installs dependencies and locks them.
-- Installs pre-commit hooks.
-- Installs the project as a Python package.
-
-### 4. Activate the Environment
-After setup, activate the Conda environment:
-```bash
-conda activate ai-media-env
-```
+3. Install FFmpeg:
+    - **macOS**: `brew install ffmpeg`
+    - **Linux**: `sudo apt install ffmpeg`
+    - **Windows**: [Download FFmpeg](https://ffmpeg.org/download.html)
 
 ---
 
-## Running the Project
-
-To generate media, run the main script:
+## Usage
+Run the main script:
 ```bash
-python ai_media_generator/main.py
+python -m ai_media_generator.main
 ```
+
+1. Enter a story prompt when prompted.
+2. The application will:
+   - Generate text based on your prompt.
+   - Split the text into scenes.
+   - Generate images for each scene.
+   - Create audio narration for the full text.
+   - Combine images and audio into a video.
+3. The video will be saved in `assets/video/output.mp4`.
 
 ---
 
-## Project Structure
-
+## Directory Structure
 ```
 ai-media-generator/
-│
-├── ai_media_generator/      # Main package folder
-│   ├── __init__.py
-│   ├── main.py              # Main script
-│   ├── api_keys.py          # API keys (use environment variables in production)
-│   └── utils.py             # Utility functions (optional)
-│
-├── assets/                  # Directory for generated media
-│   ├── audio/
-│   ├── images/
-│   └── video/
-│
-├── tests/                   # Test cases
-│   ├── __init__.py
-│   └── test_main.py
-│
-├── setup.sh                 # Environment setup script
-├── pyproject.toml           # Poetry configuration file
-├── requirements.txt         # Exported dependencies for compatibility
-├── README.md                # Documentation
-└── .gitignore               # Git ignore file
+├── ai_media_generator/
+│   ├── main.py                # Main script
+│   ├── utils.py               # Utility functions
+├── assets/
+│   ├── audio/                 # Generated audio files
+│   ├── images/                # Generated images
+│   ├── video/                 # Generated videos
+├── .env                       # Environment variables (not tracked by Git)
+├── README.md                  # Project README
 ```
+
+---
+
+## Troubleshooting
+1. **Error: `FileNotFoundError: 'ffprobe'`**  
+   Ensure FFmpeg is installed and available in your system PATH.
+
+2. **OpenAI Errors**  
+   - Check your OpenAI API key and ensure your account has sufficient credits.
+   - Verify that you have access to the required models (e.g., GPT-4 and DALL·E).
+
+3. **Google TTS Errors**  
+   - Ensure your Google Cloud credentials file is correct and the API is enabled.
 
 ---
 
 ## Contributing
-
 1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Commit your changes and push to your fork.
-4. Submit a pull request.
+2. Create a feature branch (`git checkout -b feature-branch`).
+3. Commit your changes (`git commit -m "Add feature"`).
+4. Push to your fork (`git push origin feature-branch`).
+5. Open a pull request.
 
 ---
 
 ## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License.
 
 ---
 
+## Acknowledgements
+- [OpenAI GPT](https://openai.com/)
+- [Google Cloud Text-to-Speech](https://cloud.google.com/text-to-speech)
+- [DALL·E](https://openai.com/dall-e/)
+- [MoviePy](https://zulko.github.io/moviepy/)
+- [Pydub](https://github.com/jiaaro/pydub)

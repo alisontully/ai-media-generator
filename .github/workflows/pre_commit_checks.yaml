@@ -1,0 +1,49 @@
+name: Pre-commit Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+      # Set up the desired Python version
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10.13'
+
+      # Install Poetry
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+      # Cache Poetry dependencies for faster subsequent runs
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
+
+      # Install project dependencies using Poetry
+    - name: Install dependencies with Poetry
+      run: |
+        poetry install
+
+      # Install and run pre-commit hooks
+    - name: Run pre-commit hooks
+      run: |
+        poetry run pip install pre-commit
+        poetry run pre-commit run --all-files
