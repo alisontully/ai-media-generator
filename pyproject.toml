@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "ai-media-generator"
+version = "0.1.0"
+description = "A Python-based project that generates videos using AI."
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/your-username/ai-media-generator"
+repository = "https://github.com/your-username/ai-media-generator"
+keywords = ["AI", "video generation", "OpenAI", "text-to-speech"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.27.8"
+moviepy = "^1.0.3"
+requests = "^2.31.0"
+pydub = "^0.25.1"
+google-cloud-texttospeech = "^2.21.1"
+python-dotenv = "^1.0.1"
+google-api-core = "^2.23.0"
+imageio = "^2.36.0"
+imageio-ffmpeg = "^0.5.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.0"
+black = "^23.9.1"
+pre-commit = "^3.4.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
