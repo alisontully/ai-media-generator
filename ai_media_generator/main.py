@@ -1,15 +1,16 @@
-from utils import (
-    ensure_directory_exists,
-    download_file,
+import os
+
+import openai
+from dotenv import load_dotenv
+from google.cloud import texttospeech
+from moviepy.editor import AudioFileClip, ImageSequenceClip
+
+from ai_media_generator.utils import (
     clean_text_for_filename,
+    download_file,
+    ensure_directory_exists,
     load_env_variable,
 )
-from google.cloud import texttospeech
-from moviepy.editor import ImageSequenceClip, AudioFileClip
-import openai
-import os
-import requests
-from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -37,7 +38,7 @@ def generate_text(prompt):
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
     )
-    return response['choices'][0]['message']['content']
+    return response["choices"][0]["message"]["content"]
 
 
 def generate_audio_google_tts(text, output_path="assets/audio/output.mp3"):
@@ -48,16 +49,11 @@ def generate_audio_google_tts(text, output_path="assets/audio/output.mp3"):
     synthesis_input = texttospeech.SynthesisInput(text=text)
 
     # Select the voice and audio configuration
-    voice = texttospeech.VoiceSelectionParams(
-        language_code="en-US",
-        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
-    )
+    voice = texttospeech.VoiceSelectionParams(language_code="en-US", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL)
     audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
 
     # Perform the text-to-speech request
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
+    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
     # Save the audio file
     ensure_directory_exists(output_path)
@@ -68,24 +64,30 @@ def generate_audio_google_tts(text, output_path="assets/audio/output.mp3"):
 
 def generate_images(text):
     """Generates images from text using DALL·E."""
-    response = openai.Image.create(
-        prompt=text,
-        n=5,
-        size="1024x1024"
-    )
+    response = openai.Image.create(prompt=text, n=5, size="1024x1024")
     images = []
-    for i, data in enumerate(response['data']):
-        image_url = data['url']
+    for i, data in enumerate(response["data"]):
+        image_url = data["url"]
         output_path = f"assets/images/image_{i}.png"
         download_file(image_url, output_path)
         images.append(output_path)
     return images
 
 
-def create_video(images, audio_path, output_path="assets/video/output.mp4"):
-    """Combines images and audio into a video."""
+def create_video(images, audio_file_path, output_path="assets/video/output.mp4"):
+    """
+    Combines images and audio into a video.
+
+    Args:
+        images (list): List of image file paths to include in the video.
+        audio_file_path (str): Path to the audio file for the video.
+        output_path (str): Path to save the generated video.
+
+    Returns:
+        str: Path to the generated video.
+    """
     clip = ImageSequenceClip(images, fps=1)
-    audio = AudioFileClip(audio_path)
+    audio = AudioFileClip(audio_file_path)  # Updated variable name
     clip = clip.set_audio(audio)
     ensure_directory_exists(output_path)
     clip.write_videofile(output_path, codec="libx264", audio_codec="aac")

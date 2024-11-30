@@ -1,81 +1,56 @@
 import os
-import requests
+import re
+from typing import Optional
+
+import requests  # type: ignore
 
 
-def ensure_directory_exists(file_path):
-    """
-    Ensures that the directory for the given file path exists. Creates it if it doesn't.
-
-    Args:
-        file_path (str): The path to the file or directory.
-    """
+def ensure_directory_exists(file_path: str) -> None:
+    """Ensures that the directory for the given file path exists."""
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
 
-def download_file(url, output_path):
+def download_file(url: str, output_path: str, timeout: int = 10) -> str:
     """
     Downloads a file from the given URL and saves it to the specified output path.
 
     Args:
         url (str): The URL to download the file from.
         output_path (str): The path to save the downloaded file.
+        timeout (int): The timeout for the request in seconds (default: 10).
 
     Returns:
         str: The output path where the file was saved.
+
+    Raises:
+        RuntimeError: If the download fails due to an HTTP error.
     """
     ensure_directory_exists(output_path)
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, timeout=timeout)
     if response.status_code == 200:
         with open(output_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
         return output_path
-    else:
-        raise Exception(f"Failed to download file from {url}. Status code: {response.status_code}")
+    raise RuntimeError(f"Failed to download file from {url}. Status code: {response.status_code}")
 
 
-def clean_text_for_filename(text, max_length=50):
+def clean_text_for_filename(text: str, max_length: int = 50) -> str:
     """
-    Cleans a string to make it safe to use as a filename.
+    Cleans a string to make it safe for use as a filename.
 
     Args:
-        text (str): The string to clean.
-        max_length (int): The maximum length of the filename.
+        text (str): The input string to be cleaned.
+        max_length (int): The maximum length for the filename (default is 50).
 
     Returns:
-        str: A cleaned, safe filename.
+        str: A cleaned and safe filename string.
     """
-    import re
     filename = re.sub(r"[^\w\s-]", "", text)  # Remove invalid characters
     filename = re.sub(r"[\s]+", "_", filename)  # Replace spaces with underscores
-    return filename[:max_length].strip("_")
+    return filename[:max_length].strip("_")  # Trim to max length and remove trailing underscores
 
 
-def load_env_variable(key, default=None):
-    """
-    Loads an environment variable and returns its value or a default if not found.
-
-    Args:
-        key (str): The environment variable key.
-        default (str): The default value if the environment variable is not found.
-
-    Returns:
-        str: The value of the environment variable or the default.
-    """
+def load_env_variable(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Loads an environment variable or returns a default value."""
     return os.getenv(key, default)
-
-
-def format_size(size_in_bytes):
-    """
-    Formats a size in bytes into a human-readable string (e.g., "2.5 MB").
-
-    Args:
-        size_in_bytes (int): Size in bytes.
-
-    Returns:
-        str: Formatted size string.
-    """
-    for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size_in_bytes < 1024:
-            return f"{size_in_bytes:.2f} {unit}"
-        size_in_bytes /= 1024

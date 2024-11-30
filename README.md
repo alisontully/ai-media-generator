@@ -82,14 +82,14 @@ ai-media-generator/
 ---
 
 ## Troubleshooting
-1. **Error: `FileNotFoundError: 'ffprobe'`**  
+1. **Error: `FileNotFoundError: 'ffprobe'`**
    Ensure FFmpeg is installed and available in your system PATH.
 
-2. **OpenAI Errors**  
+2. **OpenAI Errors**
    - Check your OpenAI API key and ensure your account has sufficient credits.
    - Verify that you have access to the required models (e.g., GPT-4 and DALL·E).
 
-3. **Google TTS Errors**  
+3. **Google TTS Errors**
    - Ensure your Google Cloud credentials file is correct and the API is enabled.
 
 ---

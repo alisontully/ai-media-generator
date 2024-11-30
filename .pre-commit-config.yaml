@@ -1,5 +1,5 @@
 # used with the precommit package if you want to have black formatting as a pre-commit hook for git, which you do!
-files: ^src/.*|^tests/.*
+files: ^.*$
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -42,13 +42,13 @@ repos:
     rev: '6.3.0'
     hooks:
     -   id: pydocstyle
-        args: ['--convention=google', '--add-ignore=D100,D101,D102,D103,D104,D105,D106,D107,D212']
+        args: ['--convention=google', '--add-ignore=D212,D104,D100']
 
 -   repo: https://github.com/pycqa/pylint
     rev: 'v3.0.1'
     hooks:
     -   id: pylint
-        args: ['--max-line-length=120', '--disable=import-error,C0111,R0903,W0718,W0511,invalid-name,W1203']
+        args: ['--max-line-length=120', '--disable=R0801,C0114,E0401,C0103,C0116']
 
 -   repo: https://github.com/PyCQA/bandit
     rev: '1.7.5'
