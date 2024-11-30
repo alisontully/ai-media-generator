@@ -50,29 +50,49 @@ def generate_text(prompt: str) -> str:
     return ai_response["choices"][0]["message"]["content"]
 
 
-def generate_audio_google_tts(text: str, audio_output_path: str = "assets/audio/output.mp3") -> str:
+def generate_scene_audio_google_tts(scene_text: str, scene_index: int, output_dir: str = "assets/audio/scenes") -> str:
     """
-    Generates audio from text using Google Cloud Text-to-Speech.
+    Generates audio for a single scene using Google Cloud Text-to-Speech and appends a 2-second pause.
 
     Args:
-        text (str): The input text to convert to speech.
-        audio_output_path (str): The file path to save the generated audio (default: "assets/audio/output.mp3").
+        scene_text (str): The text for the scene.
+        scene_index (int): The index of the scene for naming the file.
+        output_dir (str): Directory to save the scene audio file.
 
     Returns:
-        str: The path to the generated audio file.
+        str: The path to the generated scene audio file.
     """
     client = texttospeech.TextToSpeechClient()
 
-    synthesis_input = texttospeech.SynthesisInput(text=text)
-    voice = texttospeech.VoiceSelectionParams(language_code="en-US", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL)
+    synthesis_input = texttospeech.SynthesisInput(text=scene_text)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Wavenet-I",  # Replace with the desired WaveNet voice
+    )
     audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
 
     tts_response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
-    ensure_directory_exists(audio_output_path)
-    with open(audio_output_path, "wb") as out_file:  # Renamed to `out_file` for clarity
-        out_file.write(tts_response.audio_content)
-    return audio_output_path
+    ensure_directory_exists(output_dir)
+    scene_audio_path = os.path.join(output_dir, f"scene_{scene_index}.mp3")
+
+    # Write the initial TTS audio to a file
+    temp_path = os.path.join(output_dir, f"temp_scene_{scene_index}.mp3")
+    with open(temp_path, "wb") as temp_file:
+        temp_file.write(tts_response.audio_content)
+
+    # Load the TTS audio and append 2 seconds of silence
+    audio = AudioSegment.from_file(temp_path)
+    silence = AudioSegment.silent(duration=500)  # 0.5 seconds of silence
+    audio_with_pause = audio + silence
+
+    # Export the final audio with the pause
+    audio_with_pause.export(scene_audio_path, format="mp3")
+
+    # Remove the temporary file
+    os.remove(temp_path)
+
+    return scene_audio_path
 
 
 def split_audio_by_scenes(
@@ -164,41 +184,69 @@ if __name__ == "__main__":
     modified_prompt = (
         f"Using the following input: '{user_prompt}', write a story and divide it into clear scenes. "
         "Each scene should begin with a title in the format 'Scene [number]:' "
-        "followed by a concise visual description of the key moment in the scene. "
-        "Focus on vivid, imagery-driven descriptions that can inspire illustrations or visuals."
+        "followed by a vivid description of the key visual moment and characters in the scene, "
+        "focusing on specific and evocative imagery that can inspire illustrations or visuals."
+        "Make each scene a maximum of two lines long."
     )
 
+    # Generate the story text
     generated_text = generate_text(modified_prompt)
     print(f"Generated Text:\n{generated_text}")
 
-    print("Generating images for each scene...")
-    scenes = [
-        line.strip()
-        for line in generated_text.split("\n")
-        if line.strip().startswith("Scene") or line.strip().startswith("**Scene")
-    ]
-    image_paths = []
-    for idx, scene in enumerate(scenes, start=1):
+    print("Extracting and preparing scenes...")
+    # Split the story into scenes based on 'Scene' headers
+    scenes = []
+    current_scene_text = []  # type: ignore
+    for line in generated_text.split("\n"):
+        if line.strip().lower().startswith("scene") or line.strip().lower().startswith("**scene"):
+            if current_scene_text:
+                # Save the previous scene's text
+                scenes.append("\n".join(current_scene_text).strip())
+                current_scene_text = []
+        else:
+            current_scene_text.append(line.strip())
+    if current_scene_text:
+        scenes.append("\n".join(current_scene_text).strip())  # Append the last scene
+
+    print(f"Extracted {len(scenes)} scenes.")
+
+    # Generate audio for each scene
+    print("Generating audio for each scene...")
+    scene_audio_paths = []
+    for idx, scene_text in enumerate(scenes, start=1):
+        print(f"Generating audio for Scene {idx}:")
+        print(scene_text)
         try:
-            response = openai.Image.create(prompt=scene, n=1, size="1024x1024")
+            audio_path = generate_scene_audio_google_tts(scene_text, idx)
+            scene_audio_paths.append(audio_path)
+        except Exception as e:
+            print(f"Error generating audio for Scene {idx}: {e}")
+
+    print("Generating images for each scene...")
+    image_paths = []
+    for idx, scene_text in enumerate(scenes, start=1):
+        try:
+            response = openai.Image.create(prompt=scene_text, n=1, size="1024x1024")
             image_url = response["data"][0]["url"]
             output_path = f"assets/images/scene_{idx}.png"
             download_file(image_url, output_path)
             image_paths.append(output_path)
         except openai.error.OpenAIError as e:
-            print(f"Error generating image for {scene}: {e}")
-
-    print(f"Generated {len(image_paths)} images for the scenes.")
-    audio_path = generate_audio_google_tts(generated_text)
-    scene_durations = [len(AudioSegment.from_file(audio_path)) // 1000 // len(scenes)] * len(scenes)
-    scene_audio_paths = split_audio_by_scenes(audio_path, scene_durations)
+            print(f"Error generating image for Scene {idx}: {e}")
 
     print("Creating individual videos for each scene...")
-    scene_video_paths = [
-        create_video_for_scene(image, audio, idx)
-        for idx, (image, audio) in enumerate(zip(image_paths, scene_audio_paths), start=1)
-    ]
+    scene_video_paths = []
+    for idx, (image, audio) in enumerate(zip(image_paths, scene_audio_paths), start=1):
+        try:
+            print(f"Creating video for Scene {idx}")
+            video_path = create_video_for_scene(image, audio, idx)
+            scene_video_paths.append(video_path)
+        except Exception as e:
+            print(f"Error creating video for Scene {idx}: {e}")
 
     print("Combining all scene videos into a final video...")
-    final_video_path = combine_scene_videos(scene_video_paths)
-    print(f"Final video created at {final_video_path}")
+    try:
+        final_video_path = combine_scene_videos(scene_video_paths)
+        print(f"Final video created at {final_video_path}")
+    except Exception as e:
+        print(f"Error combining videos: {e}")
