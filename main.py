@@ -1,3 +1,4 @@
+import logging
 import os
 
 import openai
@@ -12,6 +13,15 @@ from moviepy.editor import (
 from pydub import AudioSegment
 
 from ai_media_generator.utils import download_file, ensure_directory_exists
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("script.log"), logging.StreamHandler()],
+)
+logger = logging.getLogger(__name__)
+
 
 # Load environment variables
 load_dotenv()
@@ -191,9 +201,9 @@ if __name__ == "__main__":
 
     # Generate the story text
     generated_text = generate_text(modified_prompt)
-    print(f"Generated Text:\n{generated_text}")
+    logger.info(f"Generated Text:\n{generated_text}")
 
-    print("Extracting and preparing scenes...")
+    logger.info("Extracting and preparing scenes...")
     # Split the story into scenes based on 'Scene' headers
     scenes = []
     current_scene_text = []  # type: ignore
@@ -208,21 +218,21 @@ if __name__ == "__main__":
     if current_scene_text:
         scenes.append("\n".join(current_scene_text).strip())  # Append the last scene
 
-    print(f"Extracted {len(scenes)} scenes.")
+    logger.info(f"Extracted {len(scenes)} scenes.")
 
     # Generate audio for each scene
-    print("Generating audio for each scene...")
+    logger.info("Generating audio for each scene...")
     scene_audio_paths = []
     for idx, scene_text in enumerate(scenes, start=1):
-        print(f"Generating audio for Scene {idx}:")
-        print(scene_text)
+        logger.info(f"Generating audio for Scene {idx}:")
+        logger.info(scene_text)
         try:
             audio_path = generate_scene_audio_google_tts(scene_text, idx)
             scene_audio_paths.append(audio_path)
         except Exception as e:
-            print(f"Error generating audio for Scene {idx}: {e}")
+            logger.info(f"Error generating audio for Scene {idx}: {e}")
 
-    print("Generating images for each scene...")
+    logger.info("Generating images for each scene...")
     image_paths = []
     for idx, scene_text in enumerate(scenes, start=1):
         try:
@@ -232,21 +242,21 @@ if __name__ == "__main__":
             download_file(image_url, output_path)
             image_paths.append(output_path)
         except openai.error.OpenAIError as e:
-            print(f"Error generating image for Scene {idx}: {e}")
+            logger.info(f"Error generating image for Scene {idx}: {e}")
 
-    print("Creating individual videos for each scene...")
+    logger.info("Creating individual videos for each scene...")
     scene_video_paths = []
     for idx, (image, audio) in enumerate(zip(image_paths, scene_audio_paths), start=1):
         try:
-            print(f"Creating video for Scene {idx}")
+            logger.info(f"Creating video for Scene {idx}")
             video_path = create_video_for_scene(image, audio, idx)
             scene_video_paths.append(video_path)
         except Exception as e:
-            print(f"Error creating video for Scene {idx}: {e}")
+            logger.info(f"Error creating video for Scene {idx}: {e}")
 
-    print("Combining all scene videos into a final video...")
+    logger.info("Combining all scene videos into a final video...")
     try:
         final_video_path = combine_scene_videos(scene_video_paths)
-        print(f"Final video created at {final_video_path}")
+        logger.info(f"Final video created at {final_video_path}")
     except Exception as e:
-        print(f"Error combining videos: {e}")
+        logger.info(f"Error combining videos: {e}")

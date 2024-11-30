@@ -30,28 +30,23 @@ git clone https://github.com/alisontully/ai-media-generator.git
 cd ai-media-generator
 ```
 
-### Set Up the Environment
-1. Install dependencies:
-    ```bash
-    poetry install
-    ```
-2. Add your environment variables in a `.env` file:
-    ```
-    OPENAI_API_KEY=your_openai_api_key
-    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-google-credentials.json
-    ```
+### Run the Setup Script
+Run the provided setup script to install dependencies and set up the environment:
+```bash
+ ENV_NAME=ai-media-env PYTHON_VERSION=3.10 PROJECT_NAME=ai-media-generator ./setup.sh
+```
 
-3. Install FFmpeg:
-    - **macOS**: `brew install ffmpeg`
-    - **Linux**: `sudo apt install ffmpeg`
-    - **Windows**: [Download FFmpeg](https://ffmpeg.org/download.html)
+This script will:
+1. Install Python dependencies using Poetry.
+2. Verify your environment variables for OpenAI and Google Cloud credentials.
+3. Check if FFmpeg is installed.
 
 ---
 
 ## Usage
 Run the main script:
 ```bash
-python -m ai_media_generator.main
+poetry run python -m ai_media_generator.main
 ```
 
 1. Enter a story prompt when prompted.
@@ -75,6 +70,7 @@ ai-media-generator/
 │   ├── audio/                 # Generated audio files
 │   ├── images/                # Generated images
 │   ├── video/                 # Generated videos
+├── setup.sh                   # Setup script
 ├── .env                       # Environment variables (not tracked by Git)
 ├── README.md                  # Project README
 ```
