@@ -14,6 +14,14 @@ AI Media Generator is a Python application that generates multimedia content bas
 4. **Audio Narration**: Converts the full story into audio using Google Text-to-Speech.
 5. **Video Creation**: Combines images and audio into a cohesive video.
 
+## YouTube Channel
+
+Some of the generated videos will be uploaded to our YouTube channel:
+[Little Story Explorers](https://www.youtube.com/@LittleStoryExplorers-c2c)
+
+Subscribe to watch the stories come to life!
+
+
 ---
 
 ## Installation
